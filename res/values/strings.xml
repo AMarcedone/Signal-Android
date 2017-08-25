@@ -1041,6 +1041,8 @@
     <string name="registration_progress_activity__telephone">Telephone</string>
     <string name="registration_progress_activity__check">Check</string>
 
+    <string name="registration_progress_activity__publishing_key_to_keytransparency_log">Adding to Key Transparency...</string>
+
     <!-- recipients_panel -->
     <string name="recipients_panel__to"><small>Enter a name or number</small></string>
     <string name="recipients_panel__add_members">Add members</string>

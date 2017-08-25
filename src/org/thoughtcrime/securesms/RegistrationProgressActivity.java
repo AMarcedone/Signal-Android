@@ -75,17 +75,22 @@ public class RegistrationProgressActivity extends BaseActionBarActivity {
   private ProgressBar generatingKeysProgress;
   private ProgressBar gcmRegistrationProgress;
 
+  private ProgressBar ktPublishinkKeyProgress;
 
   private ImageView   connectingCheck;
   private ImageView   verificationCheck;
   private ImageView   generatingKeysCheck;
   private ImageView   gcmRegistrationCheck;
 
+  private ImageView   ktPublishingKeyCheck;
+
   private TextView    connectingText;
   private TextView    verificationText;
   private TextView    registrationTimerText;
   private TextView    generatingKeysText;
   private TextView    gcmRegistrationText;
+
+  private TextView    ktPublishingKeyText;
 
   private Button      verificationFailureButton;
   private Button      connectivityFailureButton;
@@ -165,6 +170,10 @@ public class RegistrationProgressActivity extends BaseActionBarActivity {
     this.timeoutProgressLayout     = (RelativeLayout) findViewById(R.id.timer_progress_layout);
     Button editButton              = (Button)      findViewById(R.id.edit_button);
 
+    this.ktPublishingKeyCheck      = (ImageView)   findViewById(R.id.kt_publishing_key_complete);
+    this.ktPublishingKeyText       = (TextView)    findViewById(R.id.kt_publishing_key_text);
+    this.ktPublishinkKeyProgress   = (ProgressBar) findViewById(R.id.kt_publishing_key_progress);
+
     editButton.setOnClickListener(new EditButtonListener());
     this.verificationFailureButton.setOnClickListener(new EditButtonListener());
     this.connectivityFailureButton.setOnClickListener(new EditButtonListener());
@@ -227,6 +236,11 @@ public class RegistrationProgressActivity extends BaseActionBarActivity {
     this.connectingCheck.setVisibility(View.INVISIBLE);
     this.verificationProgress.setVisibility(View.INVISIBLE);
     this.verificationCheck.setVisibility(View.INVISIBLE);
+
+    this.ktPublishinkKeyProgress.setVisibility(View.INVISIBLE);
+    this.ktPublishingKeyCheck.setVisibility(View.INVISIBLE);
+    this.ktPublishingKeyText.setTextColor(UNFOCUSED_COLOR);
+
     this.generatingKeysProgress.setVisibility(View.INVISIBLE);
     this.generatingKeysCheck.setVisibility(View.INVISIBLE);
     this.gcmRegistrationProgress.setVisibility(View.INVISIBLE);
@@ -246,6 +260,11 @@ public class RegistrationProgressActivity extends BaseActionBarActivity {
     this.connectingCheck.setVisibility(View.VISIBLE);
     this.verificationProgress.setVisibility(View.VISIBLE);
     this.verificationCheck.setVisibility(View.INVISIBLE);
+
+    this.ktPublishinkKeyProgress.setVisibility(View.INVISIBLE);
+    this.ktPublishingKeyCheck.setVisibility(View.INVISIBLE);
+    this.ktPublishingKeyText.setTextColor(UNFOCUSED_COLOR);
+
     this.generatingKeysProgress.setVisibility(View.INVISIBLE);
     this.generatingKeysCheck.setVisibility(View.INVISIBLE);
     this.gcmRegistrationProgress.setVisibility(View.INVISIBLE);
@@ -258,6 +277,32 @@ public class RegistrationProgressActivity extends BaseActionBarActivity {
     this.timeoutProgressLayout.setVisibility(View.VISIBLE);
   }
 
+  private void handleStateKtPublishing() {
+    this.registrationLayout.setVisibility(View.VISIBLE);
+    this.verificationFailureLayout.setVisibility(View.GONE);
+    this.connectivityFailureLayout.setVisibility(View.GONE);
+    this.connectingProgress.setVisibility(View.INVISIBLE);
+    this.connectingCheck.setVisibility(View.VISIBLE);
+    this.verificationProgress.setVisibility(View.INVISIBLE);
+    this.verificationCheck.setVisibility(View.INVISIBLE);
+
+    this.ktPublishinkKeyProgress.setVisibility(View.VISIBLE);
+    this.ktPublishingKeyCheck.setVisibility(View.INVISIBLE);
+    this.ktPublishingKeyText.setTextColor(FOCUSED_COLOR);
+
+    this.generatingKeysProgress.setVisibility(View.INVISIBLE);
+    this.generatingKeysCheck.setVisibility(View.INVISIBLE);
+    this.gcmRegistrationProgress.setVisibility(View.INVISIBLE);
+    this.gcmRegistrationCheck.setVisibility(View.INVISIBLE);
+    this.connectingText.setTextColor(UNFOCUSED_COLOR);
+    this.verificationText.setTextColor(UNFOCUSED_COLOR);
+    this.generatingKeysText.setTextColor(UNFOCUSED_COLOR);
+    this.gcmRegistrationText.setTextColor(UNFOCUSED_COLOR);
+    this.registrationProgress.setVisibility(View.VISIBLE);
+    this.timeoutProgressLayout.setVisibility(View.VISIBLE);
+  }
+
+
   private void handleStateGeneratingKeys() {
     this.registrationLayout.setVisibility(View.VISIBLE);
     this.verificationFailureLayout.setVisibility(View.GONE);
@@ -266,6 +311,11 @@ public class RegistrationProgressActivity extends BaseActionBarActivity {
     this.connectingCheck.setVisibility(View.VISIBLE);
     this.verificationProgress.setVisibility(View.INVISIBLE);
     this.verificationCheck.setVisibility(View.VISIBLE);
+
+    this.ktPublishinkKeyProgress.setVisibility(View.INVISIBLE);
+    this.ktPublishingKeyCheck.setVisibility(View.VISIBLE);
+    this.ktPublishingKeyText.setTextColor(UNFOCUSED_COLOR);
+
     this.generatingKeysProgress.setVisibility(View.VISIBLE);
     this.generatingKeysCheck.setVisibility(View.INVISIBLE);
     this.gcmRegistrationProgress.setVisibility(View.INVISIBLE);
@@ -286,6 +336,11 @@ public class RegistrationProgressActivity extends BaseActionBarActivity {
     this.connectingCheck.setVisibility(View.VISIBLE);
     this.verificationProgress.setVisibility(View.INVISIBLE);
     this.verificationCheck.setVisibility(View.VISIBLE);
+
+    this.ktPublishinkKeyProgress.setVisibility(View.INVISIBLE);
+    this.ktPublishingKeyCheck.setVisibility(View.VISIBLE);
+    this.ktPublishingKeyText.setTextColor(UNFOCUSED_COLOR);
+
     this.generatingKeysProgress.setVisibility(View.INVISIBLE);
     this.generatingKeysCheck.setVisibility(View.VISIBLE);
     this.gcmRegistrationProgress.setVisibility(View.VISIBLE);
@@ -326,6 +381,15 @@ public class RegistrationProgressActivity extends BaseActionBarActivity {
     this.connectivityFailureLayout.setVisibility(View.VISIBLE);
     this.connectivityFailureButton.setText(String.format(getString(R.string.RegistrationProgressActivity_edit_s),
                                                          PhoneNumberFormatter.formatNumberInternational(state.number)));
+  }
+
+  private void handleKtPublishingError(RegistrationState state){
+    this.registrationLayout.setVisibility(View.GONE);
+    this.verificationFailureLayout.setVisibility(View.GONE);
+    this.connectivityFailureLayout.setVisibility(View.VISIBLE);
+    this.connectivityFailureButton.setText(String.format(getString(R.string.RegistrationProgressActivity_edit_s),
+            PhoneNumberFormatter.formatNumberInternational(state.number)));
+    Dialogs.showAlertDialog(this, "KeyTransparency error", "Error publishing your key to the KeyTransparency log");
   }
 
   private void handleMultiRegistrationError(RegistrationState state) {
@@ -416,6 +480,10 @@ public class RegistrationProgressActivity extends BaseActionBarActivity {
       case RegistrationState.STATE_IDLE:                 handleStateIdle();                       break;
       case RegistrationState.STATE_CONNECTING:           handleStateConnecting();                 break;
       case RegistrationState.STATE_VERIFYING:            handleStateVerifying();                  break;
+
+      case RegistrationState.STATE_KEYTRANSP_PUBLISHING: handleStateKtPublishing();               break;
+      case RegistrationState.STATE_KEYTRANSPARENCY_ERROR: handleKtPublishingError(state);         break;
+
       case RegistrationState.STATE_TIMER:                handleTimerUpdate();                     break;
       case RegistrationState.STATE_GENERATING_KEYS:      handleStateGeneratingKeys();             break;
       case RegistrationState.STATE_GCM_REGISTERING:      handleStateGcmRegistering();             break;
@@ -456,6 +524,9 @@ public class RegistrationProgressActivity extends BaseActionBarActivity {
     private static final int RATE_LIMIT_ERROR         = 2;
     private static final int VERIFICATION_ERROR       = 3;
     private static final int MULTI_REGISTRATION_ERROR = 4;
+
+    private static final int KEYTRANSPARENCY_ERROR       = 5;
+
 
     private final String  e164number;
     private final String  password;
@@ -517,6 +588,11 @@ public class RegistrationProgressActivity extends BaseActionBarActivity {
               Dialogs.showAlertDialog(context, getString(R.string.RegistrationProgressActivity_verification_failed),
                                    getString(R.string.RegistrationProgressActivity_the_verification_code_you_submitted_is_incorrect));
               break;
+
+            case KEYTRANSPARENCY_ERROR:
+              Dialogs.showAlertDialog(context, "KeyTransparency Error", "KeyTransparency Error occurred");
+              break;
+
             case RATE_LIMIT_ERROR:
               Dialogs.showAlertDialog(context, getString(R.string.RegistrationProgressActivity_too_many_attempts),
                                    getString(R.string.RegistrationProgressActivity_youve_submitted_an_incorrect_verification_code_too_many_times));

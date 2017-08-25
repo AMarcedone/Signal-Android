@@ -11,6 +11,9 @@ import android.os.IBinder;
 import android.util.Log;
 
 import com.google.android.gms.gcm.GoogleCloudMessaging;
+import com.google.keytransparency.client.KeyTransparencyClient;
+import com.google.keytransparency.client.KeyTransparencyException;
+import com.google.keytransparency.client.LogReceiver;
 
 import org.thoughtcrime.securesms.R;
 import org.thoughtcrime.securesms.crypto.IdentityKeyUtil;
@@ -243,6 +246,44 @@ public class RegistrationService extends Service {
     SignedPreKeyRecord signedPreKey = PreKeyUtil.generateSignedPreKey(this, identityKey, true);
     accountManager.setPreKeys(identityKey.getPublicKey(), signedPreKey, records);
 
+    setState(new RegistrationState(RegistrationState.STATE_KEYTRANSP_PUBLISHING, number));
+
+    final String DEFAULT_AUTHORIZED_PUBLIC_KEY = "-----BEGIN PUBLIC KEY-----\n"+
+            "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEBUzgqmfMNYETU67U5kklSx/wfqcd\n"+
+            "Zn+mxLDouFyti/hdshzOlZYfb51YG+zhgQQ7PpTzoj3Lz/EdfeZauwDKPA==\n"+
+            "-----END PUBLIC KEY-----";
+
+    final String DEFAULT_AUTHORIZED_PRIVATE_KEY = "-----BEGIN EC PRIVATE KEY-----\n" +
+            "MHcCAQEEIKrzmO7QnfhTXOSP7hPk6j5fO2b36z97w35Fdr6d0qUkoAoGCCqGSM49\n" +
+            "AwEHoUQDQgAEBUzgqmfMNYETU67U5kklSx/wfqcdZn+mxLDouFyti/hdshzOlZYf\n" +
+            "b51YG+zhgQQ7PpTzoj3Lz/EdfeZauwDKPA==\n" +
+            "-----END EC PRIVATE KEY-----";
+    final int DEFAULT_RETRY_COUNT = 10;
+    final String KT_URL = "35.184.134.53:8080";
+    final String SIGNAL_APP_ID = "SIGNAL";
+
+
+    try {
+      Log.w("RegSerKEYTRANSPARENCY", "Before KT INIT");
+      KeyTransparencyClient.setTimeout(5000);
+      KeyTransparencyClient.addVerboseLogsDestination(new LogReceiver() {
+        @Override
+        public long write(byte[] bytes) throws Exception {
+          Log.w("KeyTransparency", new String(bytes, "UTF-8"));
+          return bytes.length;
+        }
+      });
+
+      KeyTransparencyClient.addKtServer(KT_URL, true, null, null);
+      Log.w("RegSerKEYTRANSPARENCY", "Registering " + number  + " with key " + bytesToHex(identityKey.getPublicKey().serialize()));
+      KeyTransparencyClient.updateEntry(KT_URL,number,SIGNAL_APP_ID,identityKey.getPublicKey().serialize(),DEFAULT_AUTHORIZED_PRIVATE_KEY,DEFAULT_AUTHORIZED_PUBLIC_KEY,DEFAULT_RETRY_COUNT);
+    } catch (KeyTransparencyException e) {
+      Log.w("RegistrationService", e);
+      setState(new RegistrationState(RegistrationState.STATE_KEYTRANSPARENCY_ERROR, number));
+      broadcastComplete(false);
+      return;
+    }
+
     setState(new RegistrationState(RegistrationState.STATE_GCM_REGISTERING, number));
 
     if (supportsGcm) {
@@ -263,6 +304,18 @@ public class RegistrationService extends Service {
     DirectoryRefreshListener.schedule(this);
     RotateSignedPreKeyListener.schedule(this);
   }
+
+  private final static char[] hexArray = "0123456789ABCDEF".toCharArray();
+  public static String bytesToHex(byte[] bytes) {
+    char[] hexChars = new char[bytes.length * 2];
+    for ( int j = 0; j < bytes.length; j++ ) {
+      int v = bytes[j] & 0xFF;
+      hexChars[j * 2] = hexArray[v >>> 4];
+      hexChars[j * 2 + 1] = hexArray[v & 0x0F];
+    }
+    return new String(hexChars);
+  }
+
 
   private synchronized String waitForChallenge() throws AccountVerificationTimeoutException {
     this.verificationStartTime = System.currentTimeMillis();
@@ -365,6 +418,9 @@ public class RegistrationService extends Service {
     public static final int STATE_GENERATING_KEYS      = 13;
 
     public static final int STATE_MULTI_REGISTERED     = 14;
+
+    public static final int STATE_KEYTRANSP_PUBLISHING =  15;
+    public static final int STATE_KEYTRANSPARENCY_ERROR =  16;
 
     public final int    state;
     public final String number;
