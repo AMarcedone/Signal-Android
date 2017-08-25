@@ -9,6 +9,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import org.thoughtcrime.securesms.database.IdentityDatabase;
 import org.thoughtcrime.securesms.recipients.Recipient;
 import org.thoughtcrime.securesms.recipients.Recipients;
 import org.thoughtcrime.securesms.util.ViewUtil;
@@ -20,6 +21,8 @@ public class ConversationTitleView extends LinearLayout {
   private TextView  title;
   private TextView  subtitle;
   private ImageView verified;
+  private ImageView ktverified;
+  private ImageView kterror;
 
   public ConversationTitleView(Context context) {
     this(context, null);
@@ -37,6 +40,8 @@ public class ConversationTitleView extends LinearLayout {
     this.title    = (TextView)  findViewById(R.id.title);
     this.subtitle = (TextView)  findViewById(R.id.subtitle);
     this.verified = (ImageView) findViewById(R.id.verified_indicator);
+    this.ktverified = (ImageView) findViewById(R.id.keytransparency_indicator);
+    this.kterror = (ImageView) findViewById(R.id.keytransparency_error_indicator);
 
     ViewUtil.setTextViewGravityStart(this.title, getContext());
     ViewUtil.setTextViewGravityStart(this.subtitle, getContext());
@@ -59,6 +64,12 @@ public class ConversationTitleView extends LinearLayout {
   public void setVerified(boolean verified) {
     this.verified.setVisibility(verified ? View.VISIBLE : View.GONE);
   }
+
+  public void setKTVerified(IdentityDatabase.VerifiedStatus verified) {
+    this.ktverified.setVisibility(verified == IdentityDatabase.VerifiedStatus.VERIFIED? View.VISIBLE : View.GONE);
+    this.kterror.setVisibility(verified == IdentityDatabase.VerifiedStatus.UNVERIFIED? View.VISIBLE : View.GONE);
+}
+
 
   private void setComposeTitle() {
     this.title.setText(R.string.ConversationActivity_compose_message);

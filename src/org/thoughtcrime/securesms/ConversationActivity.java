@@ -1291,6 +1291,7 @@ public class ConversationActivity extends PassphraseRequiredActionBarActivity
       public void run() {
         titleView.setTitle(recipients);
         titleView.setVerified(identityRecords.isVerified());
+        titleView.setKTVerified(identityRecords.isKTVerified());
         setBlockedUserState(recipients, isSecureText, isDefaultSms);
         setActionBarColor(recipients.getColor());
         invalidateOptionsMenu();
