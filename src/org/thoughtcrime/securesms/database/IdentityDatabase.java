@@ -23,14 +23,21 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Log;
+
+import com.google.keytransparency.client.KeyTransparencyClient;
+import com.google.keytransparency.client.KeyTransparencyException;
+import com.google.keytransparency.client.LogReceiver;
 
 import org.greenrobot.eventbus.EventBus;
+import org.thoughtcrime.securesms.service.RegistrationService;
 import org.thoughtcrime.securesms.util.Base64;
 import org.whispersystems.libsignal.IdentityKey;
 import org.whispersystems.libsignal.InvalidKeyException;
 import org.whispersystems.libsignal.util.guava.Optional;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 public class IdentityDatabase extends Database {
 
@@ -200,9 +207,53 @@ public class IdentityDatabase extends Database {
     }
 
     public VerifiedStatus getKTVerifiedStatus () {
-        // Make call here.
+      final String KT_URL = "35.184.134.53:8080";
+      final String SIGNAL_APP_ID = "SIGNAL";
+
+      try {
+        Log.w("KEYTRANSPARENCY", "Before KT Verification");
+        KeyTransparencyClient.addVerboseLogsDestination(new LogReceiver() {
+          @Override
+          public long write(byte[] bytes) throws Exception {
+            Log.w("KeyTransparency", new String(bytes, "UTF-8"));
+            return bytes.length;
+          }
+        });
+
+        KeyTransparencyClient.addKtServer(KT_URL, true, null, null);
+      } catch (KeyTransparencyException e) {
+        Log.w("KT AddServer Exception", e);
+      }
+
+      try{
+        Log.w("KEYTRANSPARENCY", "Before KT Get");
+        byte[] receivedKey = KeyTransparencyClient.getEntry(KT_URL,getAddress().toPhoneString(),SIGNAL_APP_ID);
+        Log.w("KEYTRANSPARENCY", "Received key: " + bytesToHex(receivedKey) + ", actual Key: " + bytesToHex(getIdentityKey().getPublicKey().serialize()));
+        if (receivedKey == null){
+          return VerifiedStatus.DEFAULT;
+        }else if(Arrays.equals(receivedKey, getIdentityKey().getPublicKey().serialize())){
+          return VerifiedStatus.VERIFIED;
+        } else {
+          return VerifiedStatus.UNVERIFIED;
+        }
+      } catch (KeyTransparencyException e) {
+        e.printStackTrace();
+      }
+
       return VerifiedStatus.VERIFIED;
     }
+
+    private final static char[] hexArray = "0123456789ABCDEF".toCharArray();
+    public static String bytesToHex(byte[] bytes) {
+      char[] hexChars = new char[bytes.length * 2];
+      for ( int j = 0; j < bytes.length; j++ ) {
+        int v = bytes[j] & 0xFF;
+        hexChars[j * 2] = hexArray[v >>> 4];
+        hexChars[j * 2 + 1] = hexArray[v & 0x0F];
+      }
+      return new String(hexChars);
+    }
+
 
     public boolean isApprovedNonBlocking() {
       return nonblockingApproval;
