@@ -35,6 +35,24 @@
                    android:alpha="0.7"
                    android:visibility="gone"/>
 
+        <ImageView android:id="@+id/keytransparency_indicator"
+            android:src="@mipmap/kt_verified"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="3dp"
+            android:layout_gravity="bottom"
+            android:alpha="0.7"
+            android:visibility="gone"/>
+
+        <ImageView android:id="@+id/keytransparency_error_indicator"
+            android:src="@mipmap/kt_error"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="3dp"
+            android:layout_gravity="bottom"
+            android:alpha="0.7"
+            android:visibility="gone"/>
+
         <TextView android:id="@+id/subtitle"
                   android:layout_width="wrap_content"
                   android:layout_height="wrap_content"

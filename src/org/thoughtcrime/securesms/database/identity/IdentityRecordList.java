@@ -40,6 +40,21 @@ public class IdentityRecordList {
     return identityRecords.size() > 0;
   }
 
+  public VerifiedStatus isKTVerified() {
+    for (IdentityRecord identityRecord : identityRecords) {
+      VerifiedStatus ktStatus = identityRecord.getKTVerifiedStatus();
+          if (ktStatus == VerifiedStatus.UNVERIFIED) {
+            return ktStatus;
+          }
+          if (ktStatus == VerifiedStatus.DEFAULT) {
+            return ktStatus;
+          }
+      }
+    }
+
+    return VerifiedStatus.VERIFIED;
+  }
+
   public boolean isUnverified() {
     for (IdentityRecord identityRecord : identityRecords) {
       if (identityRecord.getVerifiedStatus() == VerifiedStatus.UNVERIFIED) {

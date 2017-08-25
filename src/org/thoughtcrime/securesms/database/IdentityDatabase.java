@@ -199,6 +199,11 @@ public class IdentityDatabase extends Database {
       return verifiedStatus;
     }
 
+    public VerifiedStatus getKTVerifiedStatus () {
+        // Make call here.
+      return VerifiedStatus.VERIFIED;
+    }
+
     public boolean isApprovedNonBlocking() {
       return nonblockingApproval;
     }
