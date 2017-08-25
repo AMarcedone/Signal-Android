@@ -50,7 +50,6 @@ public class IdentityRecordList {
             return ktStatus;
           }
       }
-    }
 
     return VerifiedStatus.VERIFIED;
   }
