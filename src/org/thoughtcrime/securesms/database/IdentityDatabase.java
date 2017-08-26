@@ -220,13 +220,13 @@ public class IdentityDatabase extends Database {
           }
         });
 
-        KeyTransparencyClient.addKtServer(KT_URL, true, null, null);
+        KeyTransparencyClient.addKtServerIfNotExists(KT_URL, true, null, null);
       } catch (KeyTransparencyException e) {
-        Log.w("KT AddServer Exception", e);
+        Log.w("KEYTRANSPARENCY", "AddServer Exception", e);
+        return VerifiedStatus.UNVERIFIED;
       }
 
       try{
-        Log.w("KEYTRANSPARENCY", "Before KT Get");
         byte[] receivedKey = KeyTransparencyClient.getEntry(KT_URL,getAddress().toPhoneString(),SIGNAL_APP_ID);
         Log.w("KEYTRANSPARENCY", "Received key: " + bytesToHex(receivedKey) + ", actual Key: " + bytesToHex(getIdentityKey().getPublicKey().serialize()));
         if (receivedKey == null){
@@ -238,9 +238,11 @@ public class IdentityDatabase extends Database {
         }
       } catch (KeyTransparencyException e) {
         e.printStackTrace();
+        Log.w("KEYTRANSPARENCY", "GetEntry Exception", e);
+        // If there is a network error or an invalid proof, we conservatively show the Kt Status as failing.
+        return VerifiedStatus.UNVERIFIED;
       }
 
-      return VerifiedStatus.VERIFIED;
     }
 
     private final static char[] hexArray = "0123456789ABCDEF".toCharArray();

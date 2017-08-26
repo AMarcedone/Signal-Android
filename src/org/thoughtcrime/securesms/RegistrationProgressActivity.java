@@ -284,7 +284,7 @@ public class RegistrationProgressActivity extends BaseActionBarActivity {
     this.connectingProgress.setVisibility(View.INVISIBLE);
     this.connectingCheck.setVisibility(View.VISIBLE);
     this.verificationProgress.setVisibility(View.INVISIBLE);
-    this.verificationCheck.setVisibility(View.INVISIBLE);
+    this.verificationCheck.setVisibility(View.VISIBLE);
 
     this.ktPublishinkKeyProgress.setVisibility(View.VISIBLE);
     this.ktPublishingKeyCheck.setVisibility(View.INVISIBLE);
@@ -298,8 +298,8 @@ public class RegistrationProgressActivity extends BaseActionBarActivity {
     this.verificationText.setTextColor(UNFOCUSED_COLOR);
     this.generatingKeysText.setTextColor(UNFOCUSED_COLOR);
     this.gcmRegistrationText.setTextColor(UNFOCUSED_COLOR);
-    this.registrationProgress.setVisibility(View.VISIBLE);
-    this.timeoutProgressLayout.setVisibility(View.VISIBLE);
+    this.registrationProgress.setVisibility(View.INVISIBLE);
+    this.timeoutProgressLayout.setVisibility(View.INVISIBLE);
   }
 
 
@@ -387,8 +387,7 @@ public class RegistrationProgressActivity extends BaseActionBarActivity {
     this.registrationLayout.setVisibility(View.GONE);
     this.verificationFailureLayout.setVisibility(View.GONE);
     this.connectivityFailureLayout.setVisibility(View.VISIBLE);
-    this.connectivityFailureButton.setText(String.format(getString(R.string.RegistrationProgressActivity_edit_s),
-            PhoneNumberFormatter.formatNumberInternational(state.number)));
+    this.connectivityFailureButton.setText("Restart registration");
     Dialogs.showAlertDialog(this, "KeyTransparency error", "Error publishing your key to the KeyTransparency log");
   }
 

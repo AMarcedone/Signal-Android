@@ -1145,6 +1145,7 @@ public class ConversationActivity extends PassphraseRequiredActionBarActivity
         }
 
         titleView.setVerified(isSecureText && identityRecords.isVerified());
+        titleView.setKTVerified(identityRecords.isKTVerified());
 
         future.set(true);
       }

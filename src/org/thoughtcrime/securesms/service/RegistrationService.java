@@ -183,6 +183,10 @@ public class RegistrationService extends Service {
       Log.w("RegistrationService", e);
       setState(new RegistrationState(RegistrationState.STATE_NETWORK_ERROR, number));
       broadcastComplete(false);
+    } catch (KeyTransparencyException kte) {
+      Log.w("RegistrationService", kte);
+      setState(new RegistrationState(RegistrationState.STATE_KEYTRANSPARENCY_ERROR, number));
+      broadcastComplete(false);
     }
   }
 
@@ -231,58 +235,25 @@ public class RegistrationService extends Service {
       Log.w("RegistrationService", e);
       setState(new RegistrationState(RegistrationState.STATE_NETWORK_ERROR, number));
       broadcastComplete(false);
+    } catch (KeyTransparencyException kte) {
+      Log.w("RegistrationService", kte);
+      setState(new RegistrationState(RegistrationState.STATE_KEYTRANSPARENCY_ERROR, number));
+      broadcastComplete(false);
     } finally {
       shutdownChallengeListener();
     }
   }
 
   private void handleCommonRegistration(SignalServiceAccountManager accountManager, String number, String password, String signalingKey, boolean supportsGcm)
-      throws IOException
-  {
+          throws IOException, KeyTransparencyException {
+    handleKtPublishing(number);
+
     setState(new RegistrationState(RegistrationState.STATE_GENERATING_KEYS, number));
     Address            self         = Address.fromSerialized(number);
     IdentityKeyPair    identityKey  = IdentityKeyUtil.getIdentityKeyPair(this);
     List<PreKeyRecord> records      = PreKeyUtil.generatePreKeys(this);
     SignedPreKeyRecord signedPreKey = PreKeyUtil.generateSignedPreKey(this, identityKey, true);
     accountManager.setPreKeys(identityKey.getPublicKey(), signedPreKey, records);
-
-    setState(new RegistrationState(RegistrationState.STATE_KEYTRANSP_PUBLISHING, number));
-
-    final String DEFAULT_AUTHORIZED_PUBLIC_KEY = "-----BEGIN PUBLIC KEY-----\n"+
-            "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEBUzgqmfMNYETU67U5kklSx/wfqcd\n"+
-            "Zn+mxLDouFyti/hdshzOlZYfb51YG+zhgQQ7PpTzoj3Lz/EdfeZauwDKPA==\n"+
-            "-----END PUBLIC KEY-----";
-
-    final String DEFAULT_AUTHORIZED_PRIVATE_KEY = "-----BEGIN EC PRIVATE KEY-----\n" +
-            "MHcCAQEEIKrzmO7QnfhTXOSP7hPk6j5fO2b36z97w35Fdr6d0qUkoAoGCCqGSM49\n" +
-            "AwEHoUQDQgAEBUzgqmfMNYETU67U5kklSx/wfqcdZn+mxLDouFyti/hdshzOlZYf\n" +
-            "b51YG+zhgQQ7PpTzoj3Lz/EdfeZauwDKPA==\n" +
-            "-----END EC PRIVATE KEY-----";
-    final int DEFAULT_RETRY_COUNT = 10;
-    final String KT_URL = "35.184.134.53:8080";
-    final String SIGNAL_APP_ID = "SIGNAL";
-
-
-    try {
-      Log.w("RegSerKEYTRANSPARENCY", "Before KT INIT");
-      KeyTransparencyClient.setTimeout(5000);
-      KeyTransparencyClient.addVerboseLogsDestination(new LogReceiver() {
-        @Override
-        public long write(byte[] bytes) throws Exception {
-          Log.w("KeyTransparency", new String(bytes, "UTF-8"));
-          return bytes.length;
-        }
-      });
-
-      KeyTransparencyClient.addKtServer(KT_URL, true, null, null);
-      Log.w("RegSerKEYTRANSPARENCY", "Registering " + number  + " with key " + bytesToHex(identityKey.getPublicKey().serialize()));
-      KeyTransparencyClient.updateEntry(KT_URL,number,SIGNAL_APP_ID,identityKey.getPublicKey().serialize(),DEFAULT_AUTHORIZED_PRIVATE_KEY,DEFAULT_AUTHORIZED_PUBLIC_KEY,DEFAULT_RETRY_COUNT);
-    } catch (KeyTransparencyException e) {
-      Log.w("RegistrationService", e);
-      setState(new RegistrationState(RegistrationState.STATE_KEYTRANSPARENCY_ERROR, number));
-      broadcastComplete(false);
-      return;
-    }
 
     setState(new RegistrationState(RegistrationState.STATE_GCM_REGISTERING, number));
 
@@ -304,6 +275,35 @@ public class RegistrationService extends Service {
     DirectoryRefreshListener.schedule(this);
     RotateSignedPreKeyListener.schedule(this);
   }
+
+  void handleKtPublishing(String number) throws KeyTransparencyException {
+    setState(new RegistrationState(RegistrationState.STATE_KEYTRANSP_PUBLISHING, number));
+
+    IdentityKeyPair    identityKey  = IdentityKeyUtil.getIdentityKeyPair(this);
+
+    final String DEFAULT_AUTHORIZED_PUBLIC_KEY = "-----BEGIN PUBLIC KEY-----\n"+
+            "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEBUzgqmfMNYETU67U5kklSx/wfqcd\n"+
+            "Zn+mxLDouFyti/hdshzOlZYfb51YG+zhgQQ7PpTzoj3Lz/EdfeZauwDKPA==\n"+
+            "-----END PUBLIC KEY-----";
+
+    final String DEFAULT_AUTHORIZED_PRIVATE_KEY = "-----BEGIN EC PRIVATE KEY-----\n" +
+            "MHcCAQEEIKrzmO7QnfhTXOSP7hPk6j5fO2b36z97w35Fdr6d0qUkoAoGCCqGSM49\n" +
+            "AwEHoUQDQgAEBUzgqmfMNYETU67U5kklSx/wfqcdZn+mxLDouFyti/hdshzOlZYf\n" +
+            "b51YG+zhgQQ7PpTzoj3Lz/EdfeZauwDKPA==\n" +
+            "-----END EC PRIVATE KEY-----";
+    final int DEFAULT_RETRY_COUNT = 10;
+    final String KT_URL = "35.184.134.53:8080";
+    final String SIGNAL_APP_ID = "SIGNAL";
+
+
+      KeyTransparencyClient.addKtServerIfNotExists(KT_URL, true, null, null);
+      Log.w("RegSerKEYTRANSPARENCY", "Registering " + number  + " with key " + bytesToHex(identityKey.getPublicKey().serialize()));
+      KeyTransparencyClient.updateEntry(KT_URL,number,SIGNAL_APP_ID,identityKey.getPublicKey().serialize(),DEFAULT_AUTHORIZED_PRIVATE_KEY,DEFAULT_AUTHORIZED_PUBLIC_KEY,DEFAULT_RETRY_COUNT);
+
+  }
+
+
+
 
   private final static char[] hexArray = "0123456789ABCDEF".toCharArray();
   public static String bytesToHex(byte[] bytes) {

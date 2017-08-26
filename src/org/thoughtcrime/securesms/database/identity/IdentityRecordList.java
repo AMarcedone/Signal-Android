@@ -7,6 +7,7 @@ import org.thoughtcrime.securesms.database.IdentityDatabase.IdentityRecord;
 import org.thoughtcrime.securesms.database.IdentityDatabase.VerifiedStatus;
 import org.thoughtcrime.securesms.recipients.Recipient;
 import org.thoughtcrime.securesms.recipients.RecipientFactory;
+import org.whispersystems.libsignal.logging.Log;
 import org.whispersystems.libsignal.util.guava.Optional;
 
 import java.util.LinkedList;
@@ -41,15 +42,25 @@ public class IdentityRecordList {
   }
 
   public VerifiedStatus isKTVerified() {
+    if (identityRecords==null || identityRecords.size() == 0){
+      Log.w("KEYTRANSPARENCY","identityRecords is null or empty");
+      // TODO Here we should get the phone number and verify the number is not in the KT Log.
+      return VerifiedStatus.UNVERIFIED;
+    }
+
     for (IdentityRecord identityRecord : identityRecords) {
       VerifiedStatus ktStatus = identityRecord.getKTVerifiedStatus();
           if (ktStatus == VerifiedStatus.UNVERIFIED) {
             return ktStatus;
           }
-          if (ktStatus == VerifiedStatus.DEFAULT) {
-            return ktStatus;
-          }
       }
+
+    for (IdentityRecord identityRecord : identityRecords) {
+      VerifiedStatus ktStatus = identityRecord.getKTVerifiedStatus();
+      if (ktStatus == VerifiedStatus.DEFAULT) {
+        return ktStatus;
+      }
+    }
 
     return VerifiedStatus.VERIFIED;
   }

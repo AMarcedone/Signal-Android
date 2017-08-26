@@ -263,7 +263,8 @@ android {
                           'proguard-retrofit.pro',
                           'proguard-webrtc.pro',
                           'proguard-klinker.pro',
-                          'proguard.cfg'
+                          'proguard.cfg',
+                          'proguard-keytransparency.pro'
             testProguardFiles 'proguard-automation.pro',
                           'proguard.cfg'
         }
