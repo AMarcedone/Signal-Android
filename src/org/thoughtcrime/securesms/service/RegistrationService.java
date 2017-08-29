@@ -297,6 +297,7 @@ public class RegistrationService extends Service {
 
 
       KeyTransparencyClient.addKtServerIfNotExists(KT_URL, true, null, null);
+      KeyTransparencyClient.setTimeout(10000);
       Log.w("RegSerKEYTRANSPARENCY", "Registering " + number  + " with key " + bytesToHex(identityKey.getPublicKey().serialize()));
       KeyTransparencyClient.updateEntry(KT_URL,number,SIGNAL_APP_ID,identityKey.getPublicKey().serialize(),DEFAULT_AUTHORIZED_PRIVATE_KEY,DEFAULT_AUTHORIZED_PUBLIC_KEY,DEFAULT_RETRY_COUNT);
 
