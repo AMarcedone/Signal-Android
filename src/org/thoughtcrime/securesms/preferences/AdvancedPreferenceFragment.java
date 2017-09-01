@@ -18,6 +18,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.google.android.gms.gcm.GoogleCloudMessaging;
+import com.google.keytransparency.client.KeyTransparencyException;
 
 import org.thoughtcrime.securesms.ApplicationPreferencesActivity;
 import org.thoughtcrime.securesms.LogSubmitActivity;
@@ -25,10 +26,14 @@ import org.thoughtcrime.securesms.R;
 import org.thoughtcrime.securesms.RegistrationActivity;
 import org.thoughtcrime.securesms.contacts.ContactAccessor;
 import org.thoughtcrime.securesms.contacts.ContactIdentityManager;
+import org.thoughtcrime.securesms.crypto.IdentityKeyUtil;
+import org.thoughtcrime.securesms.crypto.KeyTransparencyUtil;
 import org.thoughtcrime.securesms.crypto.MasterSecret;
 import org.thoughtcrime.securesms.push.AccountManagerFactory;
+import org.thoughtcrime.securesms.util.Dialogs;
 import org.thoughtcrime.securesms.util.TextSecurePreferences;
 import org.thoughtcrime.securesms.util.task.ProgressDialogAsyncTask;
+import org.whispersystems.libsignal.IdentityKeyPair;
 import org.whispersystems.libsignal.util.guava.Optional;
 import org.whispersystems.signalservice.api.SignalServiceAccountManager;
 import org.whispersystems.signalservice.api.push.exceptions.AuthorizationFailedException;
@@ -56,6 +61,9 @@ public class AdvancedPreferenceFragment extends PreferenceFragment {
     Preference submitDebugLog = this.findPreference(SUBMIT_DEBUG_LOG_PREF);
     submitDebugLog.setOnPreferenceClickListener(new SubmitDebugLogListener());
     submitDebugLog.setSummary(getVersion(getActivity()));
+
+    Preference keyTransparencyUpdatePreference = this.findPreference("pref_renew_keytransparency_registration");
+    keyTransparencyUpdatePreference.setOnPreferenceClickListener(new KeyTransparencyUpdateListener());
   }
 
   @Override
@@ -151,6 +159,29 @@ public class AdvancedPreferenceFragment extends PreferenceFragment {
       return true;
     }
   }
+
+  private class KeyTransparencyUpdateListener implements Preference.OnPreferenceClickListener {
+    @Override
+    public boolean onPreferenceClick(Preference preference) {
+
+      //Dialogs.showInfoDialog(getActivity(),"Clicked", "YAY :)");
+
+      IdentityKeyPair identityKey  = IdentityKeyUtil.getIdentityKeyPair(getActivity());
+      String number = TextSecurePreferences.getLocalNumber(getActivity());
+
+      try {
+        KeyTransparencyUtil.updateKeyTransparencyEntry(number,identityKey);
+      } catch (KeyTransparencyException e) {
+        Log.w(KeyTransparencyUtil.KT_LOG_TAG, "Error Updating the key to KT", e);
+        Dialogs.showInfoDialog(getActivity(),"KeyTransparency", "Key Update Failed for reason: " + e.getLocalizedMessage());
+      }
+
+      Dialogs.showInfoDialog(getActivity(), "KeyTransparency", "Key Updated successfully:)");
+
+      return true;
+    }
+  }
+
 
   private class PushMessagingClickListener implements Preference.OnPreferenceChangeListener {
     private static final int SUCCESS       = 0;

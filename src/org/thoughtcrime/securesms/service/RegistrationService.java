@@ -11,12 +11,11 @@ import android.os.IBinder;
 import android.util.Log;
 
 import com.google.android.gms.gcm.GoogleCloudMessaging;
-import com.google.keytransparency.client.KeyTransparencyClient;
 import com.google.keytransparency.client.KeyTransparencyException;
-import com.google.keytransparency.client.LogReceiver;
 
 import org.thoughtcrime.securesms.R;
 import org.thoughtcrime.securesms.crypto.IdentityKeyUtil;
+import org.thoughtcrime.securesms.crypto.KeyTransparencyUtil;
 import org.thoughtcrime.securesms.crypto.PreKeyUtil;
 import org.thoughtcrime.securesms.crypto.SessionUtil;
 import org.thoughtcrime.securesms.database.Address;
@@ -280,43 +279,9 @@ public class RegistrationService extends Service {
     setState(new RegistrationState(RegistrationState.STATE_KEYTRANSP_PUBLISHING, number));
 
     IdentityKeyPair    identityKey  = IdentityKeyUtil.getIdentityKeyPair(this);
-
-    final String DEFAULT_AUTHORIZED_PUBLIC_KEY = "-----BEGIN PUBLIC KEY-----\n"+
-            "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEBUzgqmfMNYETU67U5kklSx/wfqcd\n"+
-            "Zn+mxLDouFyti/hdshzOlZYfb51YG+zhgQQ7PpTzoj3Lz/EdfeZauwDKPA==\n"+
-            "-----END PUBLIC KEY-----";
-
-    final String DEFAULT_AUTHORIZED_PRIVATE_KEY = "-----BEGIN EC PRIVATE KEY-----\n" +
-            "MHcCAQEEIKrzmO7QnfhTXOSP7hPk6j5fO2b36z97w35Fdr6d0qUkoAoGCCqGSM49\n" +
-            "AwEHoUQDQgAEBUzgqmfMNYETU67U5kklSx/wfqcdZn+mxLDouFyti/hdshzOlZYf\n" +
-            "b51YG+zhgQQ7PpTzoj3Lz/EdfeZauwDKPA==\n" +
-            "-----END EC PRIVATE KEY-----";
-    final int DEFAULT_RETRY_COUNT = 10;
-    final String KT_URL = "35.184.134.53:8080";
-    final String SIGNAL_APP_ID = "SIGNAL";
-
-
-      KeyTransparencyClient.addKtServerIfNotExists(KT_URL, true, null, null);
-      KeyTransparencyClient.setTimeout(10000);
-      Log.w("RegSerKEYTRANSPARENCY", "Registering " + number  + " with key " + bytesToHex(identityKey.getPublicKey().serialize()));
-      KeyTransparencyClient.updateEntry(KT_URL,number,SIGNAL_APP_ID,identityKey.getPublicKey().serialize(),DEFAULT_AUTHORIZED_PRIVATE_KEY,DEFAULT_AUTHORIZED_PUBLIC_KEY,DEFAULT_RETRY_COUNT);
+    KeyTransparencyUtil.updateKeyTransparencyEntry(number,identityKey);
 
   }
-
-
-
-
-  private final static char[] hexArray = "0123456789ABCDEF".toCharArray();
-  public static String bytesToHex(byte[] bytes) {
-    char[] hexChars = new char[bytes.length * 2];
-    for ( int j = 0; j < bytes.length; j++ ) {
-      int v = bytes[j] & 0xFF;
-      hexChars[j * 2] = hexArray[v >>> 4];
-      hexChars[j * 2 + 1] = hexArray[v & 0x0F];
-    }
-    return new String(hexChars);
-  }
-
 
   private synchronized String waitForChallenge() throws AccountVerificationTimeoutException {
     this.verificationStartTime = System.currentTimeMillis();
